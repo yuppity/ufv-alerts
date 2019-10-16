@@ -1,0 +1,17 @@
+{
+  "input": {
+    "name": "smtp",
+    "enabled": true
+  },
+  "manglers": [
+    {
+      "name": null
+    }
+  ],
+  "ouputs": [
+    {
+      "name": "slack",
+      "enabled": true
+    }
+  ]
+}
