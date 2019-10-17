@@ -28,14 +28,16 @@ class SMTPServer(smtpd.SMTPServer):
     def __init__(self, output_queue, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.output = output_queue
+        logger.info('Started STMP server')
 
     def process_message(self, peer, mailfrom, rcpttos, data, **kwargs):
 
         timestamp = datetime.now()
 
         logger.info(
-            'Notification email from UniFi Video. From: {}, To: {}, Remote: {}'.format(
-                mailfrom, ', '.join(rcpttos), peer))
+            'Notification email from UniFi Video at {}:{}. ' \
+            'From: {}, To: {}'.format(
+                peer[0], peer[1], mailfrom, ', '.join(rcpttos)))
 
         attachment_body = None
 
@@ -58,3 +60,7 @@ class SMTPServer(smtpd.SMTPServer):
             'alert_datetime': datetime(1970, 1, 1),
             'text_content': '',
         })
+
+def create_and_start(output_queue, addr, port):
+    smtpd = SMTPServer(output_queue, (addr, port), ('127.0.0.1', 7878))
+    asyncore.loop()
