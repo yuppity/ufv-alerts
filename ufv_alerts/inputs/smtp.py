@@ -31,7 +31,7 @@ class SMTPServer(smtpd.SMTPServer):
             'attachments': [],
             'exec_datetime': datetime.now(),
             'alert_datetime': datetime(1970, 1, 1),
-            'text_content': b'',
+            'text_content': '',
             'subject': '',
             'remote_addr': peer[0],
         }
@@ -50,7 +50,8 @@ class SMTPServer(smtpd.SMTPServer):
             content_id = message.get('Content-ID', '')
 
             if content_type == 'text/plain':
-                parsed['text_content'] += message.get_payload(decode=True)
+                parsed['text_content'] += message.get_payload(decode=True)\
+                    .decode('utf8')
             elif content_type in img_mimes and 'snapshot' in content_id:
                 parsed['attachments'].append({
                     'mime': content_type,
