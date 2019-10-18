@@ -17,6 +17,9 @@ def read(conf_file=None):
         'manglers': [{
                 'name': 'passthrough',
                 'config': {},
+            }, {
+                'name': 'datefbody',
+                'config': {},
             },
         ],
         'outputs': [{
