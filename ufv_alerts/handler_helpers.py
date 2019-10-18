@@ -48,6 +48,6 @@ def setup_handlers(
                     base.SINGULAR, obj.__name__))
 
     if sort_key:
-        sorted(handler_collection, key=sort_key)
+        handler_collection.sort(key=sort_key)
 
     return handler_collection
