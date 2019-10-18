@@ -1,26 +1,16 @@
-# coding: utf-8
-
-import re
 import smtpd
 import asyncore
 
 from email.parser import BytesParser
-from email.message import Message
 from datetime import datetime
 
-from ..module import notification_input
-from ..alert_input import UFVAlertInput
 from .. import logging
 
 logger = logging.get_logger(__name__)
 
 img_mimes = {
-    'image/gif': 'gif',
     'image/jpeg': 'jpg',
     'image/png': 'png',
-    'image/tiff': 'tiff',
-    'image/webp': 'webp',
-    'image/x-ms-bmp': 'bmp',
 }
 
 class SMTPServer(smtpd.SMTPServer):
@@ -32,35 +22,43 @@ class SMTPServer(smtpd.SMTPServer):
 
     def process_message(self, peer, mailfrom, rcpttos, data, **kwargs):
 
-        timestamp = datetime.now()
-
         logger.info(
             'Notification email from UniFi Video at {}:{}. ' \
             'From: {}, To: {}'.format(
                 peer[0], peer[1], mailfrom, ', '.join(rcpttos)))
 
-        attachment_body = None
+        parsed = {
+            'attachments': [],
+            'exec_datetime': datetime.now(),
+            'alert_datetime': datetime(1970, 1, 1),
+            'text_content': b'',
+            'subject': '',
+            'remote_addr': peer[0],
+        }
 
         for message in BytesParser().parsebytes(data).walk():
+
+            if 'Subject' in message:
+                parsed['subject'] = message['Subject']
+
+            # if 'Date' in message:
+            #     print('DATE', message['Date'])
+            #     parsed['alert_datetime'] = datetime.strptime(
+            #         message['Date'], '%a, %d %b %Y %H:%M:%S %z')
+
             content_type = message.get_content_type()
             content_id = message.get('Content-ID', '')
-            if content_type in img_mimes and 'snapshot' in content_id:
-                attachment_body = message.get_payload(decode=True)
-                break
 
-        if not attachment_body:
-            return
+            if content_type == 'text/plain':
+                parsed['text_content'] += message.get_payload(decode=True)
+            elif content_type in img_mimes and 'snapshot' in content_id:
+                parsed['attachments'].append({
+                    'mime': content_type,
+                    'body': message.get_payload(decode=True),
+                })
 
-        self.output.put({
-            'attachments': [{
-                'body': attachment_body,
-                'mime': content_type,
-            }],
-            'exec_datetime': timestamp,
-            'alert_datetime': datetime(1970, 1, 1),
-            'text_content': '',
-        })
+        self.output.put(parsed)
 
 def create_and_start(output_queue, addr, port):
-    smtpd = SMTPServer(output_queue, (addr, port), ('127.0.0.1', 7878))
+    smtpd = SMTPServer(output_queue, (addr, port), ('127.0.0.2', 0))
     asyncore.loop()
