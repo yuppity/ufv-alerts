@@ -28,6 +28,11 @@ def read(conf_file=None):
         'outputs': [{
                 'name': 'stdout',
                 'config': {},
+            }, {
+                'name': 'slack',
+                'config': {
+                    'webhook_url': '',
+                },
             },
         ],
     }
