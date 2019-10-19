@@ -20,6 +20,9 @@ def read(conf_file=None):
             }, {
                 'name': 'datefbody',
                 'config': {},
+            }, {
+                'name': 'camandsite',
+                'config': {},
             },
         ],
         'outputs': [{
